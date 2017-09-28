@@ -28,9 +28,8 @@ class DurationDisplay extends Component {
 
     this.throttledUpdateContent = throttle(bind(this, this.updateContent), 25);
 
+    this.on(player, 'durationchange', this.updateContent);
     this.on(player, [
-      'durationchange',
-
       // Also listen for timeupdate and loadedmetadata because removing those
       // listeners could have broken dependent applications/libraries. These
       // can likely be removed for 7.0.
