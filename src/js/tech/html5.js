@@ -113,6 +113,8 @@ class Html5 extends Tech {
    */
   dispose() {
     Html5.disposeMediaElement(this.el_);
+    this.options_ = null;
+
     // tech will handle clearing of the emulated track list
     super.dispose();
   }
@@ -149,6 +151,8 @@ class Html5 extends Tech {
     // each time there is a track 'change' event
     takeMetadataTrackSnapshot();
     textTracks.addEventListener('change', takeMetadataTrackSnapshot);
+
+    this.on('dispose', () => textTracks.removeEventListener('change', takeMetadataTrackSnapshot));
 
     const restoreTrackMode = () => {
       for (let i = 0; i < metadataTracksPreFullscreenState.length; i++) {
@@ -311,7 +315,7 @@ class Html5 extends Tech {
     // when iOS/Safari or other browsers attempt to autoplay.
     const settingsAttrs = ['loop', 'muted', 'playsinline', 'autoplay'];
 
-    for (let i = settingsAttrs.length - 1; i >= 0; i--) {
+    for (let i = 0; i < settingsAttrs.length; i++) {
       const attr = settingsAttrs[i];
       const value = this.options_[attr];
 
@@ -1047,7 +1051,8 @@ const mp4RE = /^video\/mp4/i;
 Html5.patchCanPlayType = function() {
 
   // Android 4.0 and above can play HLS to some extent but it reports being unable to do so
-  if (browser.ANDROID_VERSION >= 4.0 && !browser.IS_FIREFOX) {
+  // Firefox and Chrome report correctly
+  if (browser.ANDROID_VERSION >= 4.0 && !browser.IS_FIREFOX && !browser.IS_CHROME) {
     Html5.TEST_VID.constructor.prototype.canPlayType = function(type) {
       if (type && mpegurlRE.test(type)) {
         return 'maybe';

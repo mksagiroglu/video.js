@@ -193,6 +193,7 @@ QUnit.test('should get current source from src set', function(assert) {
 
   // check for matching undefined src
   assert.deepEqual(player.currentSource(), {});
+  assert.equal(player.src(), '');
 
   player.src('http://google.com');
 
@@ -1106,10 +1107,15 @@ QUnit.test('play promise should resolve to native value if returned', function(a
 
 QUnit.test('should throw on startup no techs are specified', function(assert) {
   const techOrder = videojs.options.techOrder;
+  const fixture = document.getElementById('qunit-fixture');
 
   videojs.options.techOrder = null;
   assert.throws(function() {
-    videojs(TestHelpers.makeTag());
+    const tag = TestHelpers.makeTag();
+
+    fixture.appendChild(tag);
+
+    videojs(tag);
   }, 'a falsey techOrder should throw');
 
   videojs.options.techOrder = techOrder;
@@ -1427,6 +1433,10 @@ QUnit.test('should allow to register custom player when any player has not been 
   videojs.registerComponent('Player', CustomPlayer);
 
   const tag = TestHelpers.makeTag();
+  const fixture = document.getElementById('qunit-fixture');
+
+  fixture.appendChild(tag);
+
   const player = videojs(tag);
 
   assert.equal(player instanceof CustomPlayer, true, 'player is custom');
@@ -1438,6 +1448,10 @@ QUnit.test('should allow to register custom player when any player has not been 
 
 QUnit.test('should not allow to register custom player when any player has been created', function(assert) {
   const tag = TestHelpers.makeTag();
+  const fixture = document.getElementById('qunit-fixture');
+
+  fixture.appendChild(tag);
+
   const player = videojs(tag);
 
   class CustomPlayer extends Player {}
@@ -1455,7 +1469,7 @@ QUnit.test('should not allow to register custom player when any player has been 
 QUnit.test('techGet runs through middleware if allowedGetter', function(assert) {
   let cts = 0;
   let durs = 0;
-  let ps = 0;
+  let lps = 0;
 
   videojs.use('video/foo', () => ({
     currentTime() {
@@ -1464,12 +1478,16 @@ QUnit.test('techGet runs through middleware if allowedGetter', function(assert) 
     duration() {
       durs++;
     },
-    paused() {
-      ps++;
+    loop() {
+      lps++;
     }
   }));
 
   const tag = TestHelpers.makeTag();
+  const fixture = document.getElementById('qunit-fixture');
+
+  fixture.appendChild(tag);
+
   const player = videojs(tag, {
     techOrder: ['techFaker']
   });
@@ -1478,11 +1496,11 @@ QUnit.test('techGet runs through middleware if allowedGetter', function(assert) 
 
   player.techGet_('currentTime');
   player.techGet_('duration');
-  player.techGet_('paused');
+  player.techGet_('loop');
 
   assert.equal(cts, 1, 'currentTime is allowed');
   assert.equal(durs, 1, 'duration is allowed');
-  assert.equal(ps, 0, 'paused is not allowed');
+  assert.equal(lps, 0, 'loop is not allowed');
 
   middleware.getMiddleware('video/foo').pop();
   player.dispose();
@@ -1503,6 +1521,10 @@ QUnit.test('techCall runs through middleware if allowedSetter', function(assert)
   }));
 
   const tag = TestHelpers.makeTag();
+  const fixture = document.getElementById('qunit-fixture');
+
+  fixture.appendChild(tag);
+
   const player = videojs(tag, {
     techOrder: ['techFaker']
   });
@@ -1559,7 +1581,11 @@ QUnit.test('src selects tech based on middleware', function(assert) {
     }
   }));
 
+  const fixture = document.getElementById('qunit-fixture');
   const tag = TestHelpers.makeTag();
+
+  fixture.appendChild(tag);
+
   const player = videojs(tag, {
     techOrder: ['fooTech', 'barTech']
   });

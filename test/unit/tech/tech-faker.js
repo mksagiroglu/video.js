@@ -36,6 +36,8 @@ class TechFaker extends Tech {
 
   setMuted() {}
 
+  setAutoplay() {}
+
   currentTime() {
     return 0;
   }
@@ -54,11 +56,17 @@ class TechFaker extends Tech {
   muted() {
     return false;
   }
+  autoplay() {
+    return false;
+  }
   pause() {
     return false;
   }
   paused() {
     return true;
+  }
+  loop() {
+    return false;
   }
   play() {
     this.trigger('play');

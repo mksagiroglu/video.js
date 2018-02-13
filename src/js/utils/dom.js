@@ -8,6 +8,7 @@ import log from './log.js';
 import tsml from 'tsml';
 import {isObject} from './obj';
 import computedStyle from './computed-style';
+import * as browser from './browser';
 
 /**
  * Detect if a value is a string with any non-whitespace characters.
@@ -83,6 +84,23 @@ export function isReal() {
  */
 export function isEl(value) {
   return isObject(value) && value.nodeType === 1;
+}
+
+/**
+ * Determines if the current DOM is embedded in an iframe.
+ *
+ * @return {boolean}
+ *
+ */
+export function isInFrame() {
+
+  // We need a try/catch here because Safari will throw errors when attempting
+  // to get either `parent` or `self`
+  try {
+    return window.parent !== window.self;
+  } catch (x) {
+    return true;
+  }
 }
 
 /**
@@ -725,6 +743,62 @@ export function appendContent(el, content) {
  */
 export function insertContent(el, content) {
   return appendContent(emptyEl(el), content);
+}
+
+/**
+ * Check if event was a single left click
+ *
+ * @param {EventTarget~Event} event
+ *        Event object
+ *
+ * @return {boolean}
+ *         - True if a left click
+ *         - False if not a left click
+ */
+export function isSingleLeftClick(event) {
+  // Note: if you create something draggable, be sure to
+  // call it on both `mousedown` and `mousemove` event,
+  // otherwise `mousedown` should be enough for a button
+
+  if (event.button === undefined && event.buttons === undefined) {
+    // Why do we need `butttons` ?
+    // Because, middle mouse sometimes have this:
+    // e.button === 0 and e.buttons === 4
+    // Furthermore, we want to prevent combination click, something like
+    // HOLD middlemouse then left click, that would be
+    // e.button === 0, e.buttons === 5
+    // just `button` is not gonna work
+
+    // Alright, then what this block does ?
+    // this is for chrome `simulate mobile devices`
+    // I want to support this as well
+
+    return true;
+  }
+
+  if (event.button === 0 && event.buttons === undefined) {
+    // Touch screen, sometimes on some specific device, `buttons`
+    // doesn't have anything (safari on ios, blackberry...)
+
+    return true;
+  }
+
+  if (browser.IE_VERSION === 9) {
+    // Ignore IE9
+
+    return true;
+  }
+
+  if (event.button !== 0 || event.buttons !== 1) {
+    // This is the reason we have those if else block above
+    // if any special case we can catch and let it slide
+    // we do it above, when get to here, this definitely
+    // is-not-left-click
+
+    return false;
+  }
+
+  return true;
 }
 
 /**

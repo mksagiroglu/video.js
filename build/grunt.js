@@ -1,5 +1,4 @@
 import {gruntCustomizer, gruntOptionsMaker} from './options-customizer.js';
-import chg from 'chg';
 import npmRun from 'npm-run';
 import isDocsOnly from './docs-only.js';
 
@@ -28,22 +27,6 @@ module.exports = function(grunt) {
     ]
   };
 
-  const githubReleaseDefaults = {
-    options: {
-      release: {
-        tag_name: 'v'+ version.full,
-        name: version.full,
-        body: npmRun.execSync('conventional-changelog -p videojs', {
-          silent: true,
-          encoding: 'utf8'
-        })
-      },
-    },
-    files: {
-      src: [`dist/video-js-${version.full}.zip`] // Files that you want to attach to Release
-    }
-  };
-
   /**
    * Customizes _.merge behavior in `browserifyGruntOptions` to concatenate
    * arrays. This can be overridden on a per-call basis to
@@ -70,9 +53,6 @@ module.exports = function(grunt) {
    * @return {Object}
    */
   const browserifyGruntOptions = gruntOptionsMaker(browserifyGruntDefaults, browserifyGruntCustomizer);
-
-  const githubReleaseCustomizer = gruntCustomizer;
-  const githubReleaseOptions = gruntOptionsMaker(githubReleaseDefaults, githubReleaseCustomizer);
 
   /**
    * Creates processor functions for license banners.
@@ -171,7 +151,6 @@ module.exports = function(grunt) {
         ]
       },
       fonts: { cwd: 'node_modules/videojs-font/fonts/', src: ['*'], dest: 'build/temp/font/', expand: true, filter: 'isFile' },
-      swf:   { cwd: 'node_modules/videojs-swf/dist/', src: 'video-js.swf', dest: 'build/temp/', expand: true, filter: 'isFile' },
       ie8:   { cwd: 'node_modules/videojs-ie8/dist/', src: ['**/**'], dest: 'build/temp/ie8/', expand: true, filter: 'isFile' },
       dist:  { cwd: 'build/temp/', src: ['**/**', '!test*'], dest: 'dist/', expand: true, filter: 'isFile' },
       a11y:  { src: 'sandbox/descriptions.html.example', dest: 'sandbox/descriptions.test-a11y.html' }, // Can only test a file with a .html or .htm extension
@@ -232,16 +211,6 @@ module.exports = function(grunt) {
       ie9_bs:       { browsers: ['ie9_bs'] },
       ie8_bs:       { browsers: ['ie8_bs'] }
     },
-    vjsdocs: {
-      all: {
-        // TODO: Update vjsdocs to support new build, or switch to jsdoc
-        src: '',
-        dest: 'docs/api',
-        options: {
-          baseURL: 'https://github.com/videojs/video.js/blob/master/'
-        }
-      }
-    },
     vjslanguages: {
       defaults: {
         files: {
@@ -261,65 +230,11 @@ module.exports = function(grunt) {
       }
     },
     version: {
-      options: {
-        pkg: 'package.json'
-      },
-      major: {
-        options: {
-          release: 'major'
-        },
-        src: ['package.json']
-      },
-      minor: {
-        options: {
-          release: 'minor'
-        },
-        src: ['package.json']
-      },
-      patch: {
-        options: {
-          release: 'patch'
-        },
-        src: ['package.json']
-      },
-      prerelease: {
-        options: {
-          release: 'prerelease'
-        },
-        src: ['package.json']
-      },
       css: {
         options: {
           prefix: '@version\\s*'
         },
         src: 'build/temp/video-js.css'
-      }
-    },
-    'github-release': {
-      options: {
-        repository: 'videojs/video.js',
-        auth: {
-          user: process.env.VJS_GITHUB_USER,
-          password: process.env.VJS_GITHUB_TOKEN
-        }
-      },
-      release: githubReleaseOptions(),
-      prerelease: githubReleaseOptions({
-        options: {
-          release: {
-            prerelease: true
-          }
-        }
-      })
-    },
-    babel: {
-      es5: {
-        files: [{
-          expand: true,
-          cwd: 'src/js/',
-          src: ['**/*.js', '!base-styles.js'],
-          dest: 'es5/'
-        }]
       }
     },
     browserify: {
@@ -408,12 +323,14 @@ module.exports = function(grunt) {
         'browserify:tests'
       ],
       dev: [
+        'skin',
         'shell:babel',
         'shell:rollupwatch',
         'browserify:tests',
         'watch:skin',
         'watch:lang',
-        'watch:dist'
+        'watch:dist',
+        'copy:dist'
       ],
       // Run multiple watch tasks in parallel
       // Needed so watchify can cache intelligently
@@ -519,8 +436,6 @@ module.exports = function(grunt) {
 
   // load all the npm grunt tasks
   require('load-grunt-tasks')(grunt);
-  grunt.loadNpmTasks('videojs-doc-generator');
-  grunt.loadNpmTasks('chg');
   grunt.loadNpmTasks('grunt-accessibility');
 
   grunt.registerTask('build', [
@@ -534,7 +449,6 @@ module.exports = function(grunt) {
     'cssmin',
 
     'copy:fonts',
-    'copy:swf',
     'copy:ie8',
     'vjslanguages',
     
