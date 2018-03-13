@@ -1,7 +1,7 @@
 {
   "name": "video.js",
   "description": "An HTML5 and Flash video player with a common API and skin for both.",
-  "version": "6.7.2",
+  "version": "6.7.4",
   "main": "./dist/video.cjs.js",
   "style": "./dist/video-js.css",
   "copyright": "Copyright Brightcove, Inc. <https://www.brightcove.com/>",
@@ -54,7 +54,7 @@
     "tsml": "1.0.1",
     "videojs-font": "2.1.0",
     "videojs-ie8": "1.1.2",
-    "videojs-vtt.js": "0.12.5",
+    "videojs-vtt.js": "0.12.6",
     "xhr": "2.4.0"
   },
   "devDependencies": {
@@ -78,7 +78,7 @@
     "filesize": "^3.5.11",
     "gh-release": "^3.2.0",
     "grunt": "^1.0.1",
-    "grunt-accessibility": "^5.0.0",
+    "grunt-accessibility": "^6.0.0",
     "grunt-banner": "^0.6.0",
     "grunt-browserify": "5.2.0",
     "grunt-cli": "~1.2.0",
