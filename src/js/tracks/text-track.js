@@ -3,7 +3,7 @@
  */
 import TextTrackCueList from './text-track-cue-list';
 import * as Fn from '../utils/fn.js';
-import {TextTrackKind, TextTrackMode} from './track-enums';
+import { TextTrackKind, TextTrackMode } from './track-enums';
 import log from '../utils/log.js';
 import window from 'global/window';
 import Track from './track.js';
@@ -22,21 +22,21 @@ import merge from '../utils/merge-options';
  *
  * @private
  */
-const parseCues = function(srcContent, track) {
+const parseCues = function (srcContent, track) {
   const parser = new window.WebVTT.Parser(window,
-                                          window.vttjs,
-                                          window.WebVTT.StringDecoder());
+    window.vttjs,
+    window.WebVTT.StringDecoder());
   const errors = [];
 
-  parser.oncue = function(cue) {
+  parser.oncue = function (cue) {
     track.addCue(cue);
   };
 
-  parser.onparsingerror = function(error) {
+  parser.onparsingerror = function (error) {
     errors.push(error);
   };
 
-  parser.onflush = function() {
+  parser.onflush = function () {
     track.trigger({
       type: 'loadeddata',
       target: track
@@ -68,7 +68,7 @@ const parseCues = function(srcContent, track) {
  *
  * @private
  */
-const loadTrack = function(src, track) {
+const loadTrack = function (src, track) {
   const opts = {
     uri: src
   };
@@ -78,12 +78,15 @@ const loadTrack = function(src, track) {
     opts.cors = crossOrigin;
   }
 
-  XHR(opts, Fn.bind(this, function(err, response, responseBody) {
+  XHR(opts, Fn.bind(this, function (err, response, responseBody) {
     if (err) {
       return log.error(err, response);
     }
 
     track.loaded_ = true;
+
+    if (response.rawRequest.responseURL != "")
+      track.baseURL = response.rawRequest.responseURL; // burayı değiştirdim.
 
     // Make sure that vttjs has loaded, otherwise, wait till it finished loading
     // NOTE: this is only used for the alt/video.novtt.js build
@@ -172,7 +175,7 @@ class TextTrack extends Track {
     const cues = new TextTrackCueList(this.cues_);
     const activeCues = new TextTrackCueList(this.activeCues_);
     let changed = false;
-    const timeupdateHandler = Fn.bind(this, function() {
+    const timeupdateHandler = Fn.bind(this, function () {
 
       // Accessing this.activeCues for the side-effects of updating itself
       // due to it's nature as a getter function. Do not remove or cues will
@@ -206,7 +209,7 @@ class TextTrack extends Track {
         get() {
           return default_;
         },
-        set() {}
+        set() { }
       },
 
       /**
@@ -261,7 +264,7 @@ class TextTrack extends Track {
 
           return cues;
         },
-        set() {}
+        set() { }
       },
 
       /**
@@ -290,8 +293,8 @@ class TextTrack extends Track {
             if (cue.startTime <= ct && cue.endTime >= ct) {
               active.push(cue);
             } else if (cue.startTime === cue.endTime &&
-                       cue.startTime <= ct &&
-                       cue.startTime + 0.5 >= ct) {
+              cue.startTime <= ct &&
+              cue.startTime + 0.5 >= ct) {
               active.push(cue);
             }
           }
@@ -313,7 +316,7 @@ class TextTrack extends Track {
 
           return activeCues;
         },
-        set() {}
+        set() { }
       }
     });
 
