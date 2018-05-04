@@ -86,7 +86,7 @@ const loadTrack = function (src, track) {
     track.loaded_ = true;
 
     if (response.rawRequest.responseURL != "")
-      track.baseURL = response.rawRequest.responseURL; // burayı değiştirdim.
+      track.baseURL = response.rawRequest.responseURL; // burayı değiştirdim .
 
     // Make sure that vttjs has loaded, otherwise, wait till it finished loading
     // NOTE: this is only used for the alt/video.novtt.js build
