@@ -440,13 +440,10 @@ module.exports = function(grunt) {
     'cssmin',
 
     'copy:fonts',
-<<<<<<< HEAD
     'copy:ie8',
     'vjslanguages',
     
-=======
     'vjslanguages'
->>>>>>> a2851fe4bd11a809e56ab8fbb87e9e2d0a52a05d
   ]);
 
   grunt.registerTask('dist', [
