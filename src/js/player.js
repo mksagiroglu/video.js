@@ -1927,7 +1927,7 @@ class Player extends Component {
     seconds = parseFloat(seconds);
 
     // Standardize on Infinity for signaling video is live
-    if (seconds < 0) {
+    if (seconds < 0 || seconds >= Number.MAX_VALUE) {  // Live yayında duration çok büyük bir sayı olarak gösteriliyor. Bu sayı yerine LIVE gösterilmesi için konuldu.
       seconds = Infinity;
     }
 
