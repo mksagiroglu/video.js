@@ -1170,7 +1170,7 @@ Tech.withSourceHandlers = function(_Tech) {
   const deferrable = [
     'seekable',
     'seeking',
-    'duration'
+    'duration', 'currentTime', 'setCurrentTime'
   ];
 
   /**
