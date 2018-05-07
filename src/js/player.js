@@ -1920,7 +1920,8 @@ class Player extends Component {
   duration(seconds) {
     if (seconds === undefined) {
       // return NaN if the duration is not known
-      return this.cache_.duration !== undefined ? this.cache_.duration : NaN;
+      //return this.cache_.duration !== undefined ? this.cache_.duration : NaN;
+      return this.techGet_('duration'); // Live yayında duration un doğru şekilde gösterilmesi için hangi teknoloji (hls,dash) kullanılıyorsa ondan duration çekilmesi sağlandı.
     }
 
     seconds = parseFloat(seconds);
