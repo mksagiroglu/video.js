@@ -1195,7 +1195,7 @@ Tech.withSourceHandlers = function(_Tech) {
     }
 
     this[fnName] = function() {
-      if (this.sourceHandler_ && this.sourceHandler_[fnName]) {
+      if (!this.hls && this.sourceHandler_ && this.sourceHandler_[fnName]) {
         return this.sourceHandler_[fnName].apply(this.sourceHandler_, arguments);
       }
       return originalFn.apply(this, arguments);
