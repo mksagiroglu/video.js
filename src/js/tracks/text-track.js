@@ -22,21 +22,21 @@ import merge from '../utils/merge-options';
  *
  * @private
  */
-const parseCues = function (srcContent, track) {
+const parseCues = function(srcContent, track) {
   const parser = new window.WebVTT.Parser(window,
     window.vttjs,
     window.WebVTT.StringDecoder());
   const errors = [];
 
-  parser.oncue = function (cue) {
+  parser.oncue = function(cue) {
     track.addCue(cue);
   };
 
-  parser.onparsingerror = function (error) {
+  parser.onparsingerror = function(error) {
     errors.push(error);
   };
 
-  parser.onflush = function () {
+  parser.onflush = function() {
     track.trigger({
       type: 'loadeddata',
       target: track
@@ -68,7 +68,7 @@ const parseCues = function (srcContent, track) {
  *
  * @private
  */
-const loadTrack = function (src, track) {
+const loadTrack = function(src, track) {
   const opts = {
     uri: src
   };
@@ -78,15 +78,16 @@ const loadTrack = function (src, track) {
     opts.cors = crossOrigin;
   }
 
-  XHR(opts, Fn.bind(this, function (err, response, responseBody) {
+  XHR(opts, Fn.bind(this, function(err, response, responseBody) {
     if (err) {
       return log.error(err, response);
     }
 
     track.loaded_ = true;
 
-    if (response.rawRequest.responseURL != "")
-      track.baseURL = response.rawRequest.responseURL; // burayı değiştirdim .
+    if (response.rawRequest.responseURL) {
+      track.baseURL = response.rawRequest.responseURL;
+    }
 
     // Make sure that vttjs has loaded, otherwise, wait till it finished loading
     // NOTE: this is only used for the alt/video.novtt.js build
@@ -175,7 +176,7 @@ class TextTrack extends Track {
     const cues = new TextTrackCueList(this.cues_);
     const activeCues = new TextTrackCueList(this.activeCues_);
     let changed = false;
-    const timeupdateHandler = Fn.bind(this, function () {
+    const timeupdateHandler = Fn.bind(this, function() {
 
       // Accessing this.activeCues for the side-effects of updating itself
       // due to it's nature as a getter function. Do not remove or cues will

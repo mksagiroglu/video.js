@@ -440,7 +440,7 @@ module.exports = function(grunt) {
     'cssmin',
 
     'copy:fonts',
-    'copy:ie8',
+    // 'copy:ie8',
     'vjslanguages',
     
     'vjslanguages'
