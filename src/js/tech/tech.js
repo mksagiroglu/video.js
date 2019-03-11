@@ -82,7 +82,7 @@ function createTrackHelper(self, kind, label, language, options = {}) {
  */
 class Tech extends Component {
 
- /**
+  /**
   * Create an instance of this Tech.
   *
   * @param {Object} [options]
@@ -492,21 +492,21 @@ class Tech extends Component {
    * @fires Tech#texttrackchange
    */
   initTrackListeners() {
-     /**
+    /**
       * Triggered when tracks are added or removed on the Tech {@link AudioTrackList}
       *
       * @event Tech#audiotrackchange
       * @type {EventTarget~Event}
       */
 
-     /**
+    /**
       * Triggered when tracks are added or removed on the Tech {@link VideoTrackList}
       *
       * @event Tech#videotrackchange
       * @type {EventTarget~Event}
       */
 
-     /**
+    /**
       * Triggered when tracks are added or removed on the Tech {@link TextTrackList}
       *
       * @event Tech#texttrackchange
@@ -785,6 +785,26 @@ class Tech extends Component {
    */
   setPlaysinline() {}
 
+  /**
+   * Attempt to force override of native audio tracks.
+   *
+   * @param {boolean} override - If set to true native audio will be overridden,
+   * otherwise native audio will potentially be used.
+   *
+   * @abstract
+   */
+  overrideNativeAudioTracks() {}
+
+  /**
+   * Attempt to force override of native video tracks.
+   *
+   * @param {boolean} override - If set to true native video will be overridden,
+   * otherwise native video will potentially be used.
+   *
+   * @abstract
+   */
+  overrideNativeVideoTracks() {}
+
   /*
    * Check if the tech can support the given mime-type.
    *
@@ -821,6 +841,7 @@ class Tech extends Component {
 
   /**
    * Check if the tech can support the given source
+   *
    * @param {Object} srcObj
    *        The source object
    * @param {Object} options
@@ -986,6 +1007,14 @@ TRACK_TYPES.ALL.names.forEach(function(name) {
  * @default
  */
 Tech.prototype.featuresVolumeControl = true;
+
+/**
+ * Boolean indicating whether the `Tech` supports muting volume.
+ *
+ * @type {bolean}
+ * @default
+ */
+Tech.prototype.featuresMuteControl = true;
 
 /**
  * Boolean indicating whether the `Tech` supports fullscreen resize control.
@@ -1219,7 +1248,7 @@ Tech.withSourceHandlers = function(_Tech) {
       if (_Tech.nativeSourceHandler) {
         sh = _Tech.nativeSourceHandler;
       } else {
-        log.error('No source hander found for the current source.');
+        log.error('No source handler found for the current source.');
       }
     }
 

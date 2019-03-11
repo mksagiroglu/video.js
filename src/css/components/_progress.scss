@@ -6,6 +6,7 @@
   @include flex(auto);
   @include display-flex(center);
   min-width: 4em;
+  touch-action: none;
 }
 
 .video-js .vjs-progress-control.disabled {
@@ -14,6 +15,10 @@
 
 .vjs-live .vjs-progress-control {
   display: none;
+}
+
+.vjs-liveui .vjs-progress-control {
+  @include display-flex(center);
 }
 
 .vjs-no-flex .vjs-progress-control {
@@ -113,7 +118,7 @@
   font-size: 1em;
   padding: 6px 8px 8px 8px;
   pointer-events: none;
-  position: relative;
+  position: absolute;
   top: -3.4em;
   visibility: hidden;
   z-index: 1;

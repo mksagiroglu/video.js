@@ -8,6 +8,7 @@ import * as Fn from './utils/fn.js';
 import log from './utils/log.js';
 import document from 'global/document';
 import {assign} from './utils/obj';
+import keycode from 'keycode';
 
 /**
  * Clickable Component which is clickable or keyboard actionable,
@@ -62,10 +63,7 @@ class ClickableComponent extends Component {
 
     // Add ARIA attributes for clickable element which is not a native HTML button
     attributes = assign({
-      'role': 'button',
-
-      // let the screen reader user know that the text of the element may change
-      'aria-live': 'polite'
+      role: 'button'
     }, attributes);
 
     this.tabIndex_ = props.tabIndex;
@@ -96,6 +94,9 @@ class ClickableComponent extends Component {
   createControlTextEl(el) {
     this.controlTextEl_ = Dom.createEl('span', {
       className: 'vjs-control-text'
+    }, {
+      // let the screen reader user know that the text of the element may change
+      'aria-live': 'polite'
     });
 
     if (el) {
@@ -224,12 +225,11 @@ class ClickableComponent extends Component {
    * @listens keydown
    */
   handleKeyPress(event) {
-
-    // Support Space (32) or Enter (13) key operation to fire a click event
-    if (event.which === 32 || event.which === 13) {
+    // Support Space or Enter key operation to fire a click event
+    if (keycode.isEventKey(event, 'Space') || keycode.isEventKey(event, 'Enter')) {
       event.preventDefault();
       this.trigger('click');
-    } else if (super.handleKeyPress) {
+    } else {
 
       // Pass keypress handling up for unsupported keys
       super.handleKeyPress(event);

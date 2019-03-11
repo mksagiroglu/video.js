@@ -23,7 +23,7 @@ import setupSourceset from './setup-sourceset';
  */
 class Html5 extends Tech {
 
- /**
+  /**
   * Create an instance of this Tech.
   *
   * @param {Object} [options]
@@ -34,10 +34,6 @@ class Html5 extends Tech {
   */
   constructor(options, ready) {
     super(options, ready);
-
-    if (options.enableSourceset) {
-      this.setupSourcesetHandling_();
-    }
 
     const source = options.source;
     let crossoriginTracks = false;
@@ -50,6 +46,11 @@ class Html5 extends Tech {
       this.setSource(source);
     } else {
       this.handleLateInit_(this.el_);
+    }
+
+    // setup sourceset after late sourceset/init
+    if (options.enableSourceset) {
+      this.setupSourcesetHandling_();
     }
 
     if (this.el_.hasChildNodes()) {
@@ -117,6 +118,9 @@ class Html5 extends Tech {
    * Dispose of `HTML5` media element and remove all tracks.
    */
   dispose() {
+    if (this.el_ && this.el_.resetSourceset_) {
+      this.el_.resetSourceset_();
+    }
     Html5.disposeMediaElement(this.el_);
     this.options_ = null;
 
@@ -201,6 +205,127 @@ class Html5 extends Tech {
   }
 
   /**
+   * Attempt to force override of tracks for the given type
+   *
+   * @param {string} type - Track type to override, possible values include 'Audio',
+   * 'Video', and 'Text'.
+   * @param {boolean} override - If set to true native audio/video will be overridden,
+   * otherwise native audio/video will potentially be used.
+   * @private
+   */
+  overrideNative_(type, override) {
+    // If there is no behavioral change don't add/remove listeners
+    if (override !== this[`featuresNative${type}Tracks`]) {
+      return;
+    }
+
+    const lowerCaseType = type.toLowerCase();
+
+    if (this[`${lowerCaseType}TracksListeners_`]) {
+      Object.keys(this[`${lowerCaseType}TracksListeners_`]).forEach((eventName) => {
+        const elTracks = this.el()[`${lowerCaseType}Tracks`];
+
+        elTracks.removeEventListener(eventName, this[`${lowerCaseType}TracksListeners_`][eventName]);
+      });
+    }
+
+    this[`featuresNative${type}Tracks`] = !override;
+    this[`${lowerCaseType}TracksListeners_`] = null;
+
+    this.proxyNativeTracksForType_(lowerCaseType);
+  }
+
+  /**
+   * Attempt to force override of native audio tracks.
+   *
+   * @param {boolean} override - If set to true native audio will be overridden,
+   * otherwise native audio will potentially be used.
+   */
+  overrideNativeAudioTracks(override) {
+    this.overrideNative_('Audio', override);
+  }
+
+  /**
+   * Attempt to force override of native video tracks.
+   *
+   * @param {boolean} override - If set to true native video will be overridden,
+   * otherwise native video will potentially be used.
+   */
+  overrideNativeVideoTracks(override) {
+    this.overrideNative_('Video', override);
+  }
+
+  /**
+   * Proxy native track list events for the given type to our track
+   * lists if the browser we are playing in supports that type of track list.
+   *
+   * @param {string} name - Track type; values include 'audio', 'video', and 'text'
+   * @private
+   */
+  proxyNativeTracksForType_(name) {
+    const props = TRACK_TYPES[name];
+    const elTracks = this.el()[props.getterName];
+    const techTracks = this[props.getterName]();
+
+    if (!this[`featuresNative${props.capitalName}Tracks`] ||
+        !elTracks ||
+        !elTracks.addEventListener) {
+      return;
+    }
+    const listeners = {
+      change(e) {
+        techTracks.trigger({
+          type: 'change',
+          target: techTracks,
+          currentTarget: techTracks,
+          srcElement: techTracks
+        });
+      },
+      addtrack(e) {
+        techTracks.addTrack(e.track);
+      },
+      removetrack(e) {
+        techTracks.removeTrack(e.track);
+      }
+    };
+    const removeOldTracks = function() {
+      const removeTracks = [];
+
+      for (let i = 0; i < techTracks.length; i++) {
+        let found = false;
+
+        for (let j = 0; j < elTracks.length; j++) {
+          if (elTracks[j] === techTracks[i]) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          removeTracks.push(techTracks[i]);
+        }
+      }
+
+      while (removeTracks.length) {
+        techTracks.removeTrack(removeTracks.shift());
+      }
+    };
+
+    this[props.getterName + 'Listeners_'] = listeners;
+
+    Object.keys(listeners).forEach((eventName) => {
+      const listener = listeners[eventName];
+
+      elTracks.addEventListener(eventName, listener);
+      this.on('dispose', (e) => elTracks.removeEventListener(eventName, listener));
+    });
+
+    // Remove (native) tracks that are not used anymore
+    this.on('loadstart', removeOldTracks);
+    this.on('dispose', (e) => this.off('loadstart', removeOldTracks));
+  }
+
+  /**
    * Proxy all native track list events to our track lists if the browser we are playing
    * in supports that type of track list.
    *
@@ -208,66 +333,8 @@ class Html5 extends Tech {
    */
   proxyNativeTracks_() {
     TRACK_TYPES.names.forEach((name) => {
-      const props = TRACK_TYPES[name];
-      const elTracks = this.el()[props.getterName];
-      const techTracks = this[props.getterName]();
-
-      if (!this[`featuresNative${props.capitalName}Tracks`] ||
-          !elTracks ||
-          !elTracks.addEventListener) {
-        return;
-      }
-      const listeners = {
-        change(e) {
-          techTracks.trigger({
-            type: 'change',
-            target: techTracks,
-            currentTarget: techTracks,
-            srcElement: techTracks
-          });
-        },
-        addtrack(e) {
-          techTracks.addTrack(e.track);
-        },
-        removetrack(e) {
-          techTracks.removeTrack(e.track);
-        }
-      };
-      const removeOldTracks = function() {
-        const removeTracks = [];
-
-        for (let i = 0; i < techTracks.length; i++) {
-          let found = false;
-
-          for (let j = 0; j < elTracks.length; j++) {
-            if (elTracks[j] === techTracks[i]) {
-              found = true;
-              break;
-            }
-          }
-
-          if (!found) {
-            removeTracks.push(techTracks[i]);
-          }
-        }
-
-        while (removeTracks.length) {
-          techTracks.removeTrack(removeTracks.shift());
-        }
-      };
-
-      Object.keys(listeners).forEach((eventName) => {
-        const listener = listeners[eventName];
-
-        elTracks.addEventListener(eventName, listener);
-        this.on('dispose', (e) => elTracks.removeEventListener(eventName, listener));
-      });
-
-      // Remove (native) tracks that are not used anymore
-      this.on('loadstart', removeOldTracks);
-      this.on('dispose', (e) => this.off('loadstart', removeOldTracks));
+      this.proxyNativeTracksForType_(name);
     });
-
   }
 
   /**
@@ -308,7 +375,8 @@ class Html5 extends Tech {
           delete attributes.controls;
         }
 
-        Dom.setAttributes(el,
+        Dom.setAttributes(
+          el,
           assign(attributes, {
             id: this.options_.techId,
             class: 'vjs-tech'
@@ -730,7 +798,7 @@ class Html5 extends Tech {
    *
    * @param {Object} options The object should contain values for
    * kind, language, label, and src (location of the WebVTT file)
-   * @param {Boolean} [manualCleanup=true] if set to false, the TextTrack will be
+   * @param {boolean} [manualCleanup=true] if set to false, the TextTrack will be
    * automatically removed from the video element whenever the source changes
    * @return {HTMLTrackElement} An Html Track Element.
    * This can be an emulated {@link HTMLTrackElement} or a native one.
@@ -855,6 +923,7 @@ Html5.canPlayType = function(type) {
 
 /**
  * Check if the tech can support the given source
+ *
  * @param {Object} srcObj
  *        The source object
  * @param {Object} options
@@ -881,6 +950,33 @@ Html5.canControlVolume = function() {
 
     Html5.TEST_VID.volume = (volume / 2) + 0.1;
     return volume !== Html5.TEST_VID.volume;
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * Check if the volume can be muted in this browser/device.
+ * Some devices, e.g. iOS, don't allow changing volume
+ * but permits muting/unmuting.
+ *
+ * @return {bolean}
+ *      - True if volume can be muted
+ *      - False otherwise
+ */
+Html5.canMuteVolume = function() {
+  try {
+    const muted = Html5.TEST_VID.muted;
+
+    // in some versions of iOS muted property doesn't always
+    // work, so we want to set both property and attribute
+    Html5.TEST_VID.muted = !muted;
+    if (Html5.TEST_VID.muted) {
+      Dom.setAttribute(Html5.TEST_VID, 'muted', 'muted');
+    } else {
+      Dom.removeAttribute(Html5.TEST_VID, 'muted', 'muted');
+    }
+    return muted !== Html5.TEST_VID.muted;
   } catch (e) {
     return false;
   }
@@ -943,7 +1039,7 @@ Html5.canOverrideAttributes = function() {
  *         - False otherwise
  */
 Html5.supportsNativeTextTracks = function() {
-  return browser.IS_ANY_SAFARI;
+  return browser.IS_ANY_SAFARI || (browser.IS_IOS && browser.IS_CHROME);
 };
 
 /**
@@ -1007,6 +1103,14 @@ Html5.Events = [
  * @default {@link Html5.canControlVolume}
  */
 Html5.prototype.featuresVolumeControl = Html5.canControlVolume();
+
+/**
+ * Boolean indicating whether the `Tech` supports muting volume.
+ *
+ * @type {bolean}
+ * @default {@link Html5.canMuteVolume}
+ */
+Html5.prototype.featuresMuteControl = Html5.canMuteVolume();
 
 /**
  * Boolean indicating whether the `Tech` supports changing the speed at which the media
