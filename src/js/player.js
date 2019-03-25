@@ -2273,13 +2273,16 @@ class Player extends Component {
   duration(seconds) {
     if (seconds === undefined) {
       // return NaN if the duration is not known
-      return this.cache_.duration !== undefined ? this.cache_.duration : NaN;
+      // return this.cache_.duration !== undefined ? this.cache_.duration : NaN;
+      // Live yayında duration un doğru şekilde gösterilmesi için hangi teknoloji (hls,dash) kullanılıyorsa ondan duration çekilmesi sağlandı.
+      return this.techGet_('duration');
     }
 
     seconds = parseFloat(seconds);
 
     // Standardize on Infinity for signaling video is live
-    if (seconds < 0) {
+    // Live yayında duration çok büyük bir sayı olarak gösteriliyor. Bu sayı yerine LIVE gösterilmesi için konuldu.
+    if (seconds < 0 || seconds >= Number.MAX_VALUE) {
       seconds = Infinity;
     }
 

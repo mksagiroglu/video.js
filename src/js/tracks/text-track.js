@@ -3,7 +3,7 @@
  */
 import TextTrackCueList from './text-track-cue-list';
 import * as Fn from '../utils/fn.js';
-import {TextTrackKind, TextTrackMode} from './track-enums';
+import { TextTrackKind, TextTrackMode } from './track-enums';
 import log from '../utils/log.js';
 import window from 'global/window';
 import Track from './track.js';
@@ -23,11 +23,9 @@ import merge from '../utils/merge-options';
  * @private
  */
 const parseCues = function(srcContent, track) {
-  const parser = new window.WebVTT.Parser(
-    window,
+  const parser = new window.WebVTT.Parser(window,
     window.vttjs,
-    window.WebVTT.StringDecoder()
-  );
+    window.WebVTT.StringDecoder());
   const errors = [];
 
   parser.oncue = function(cue) {
@@ -86,6 +84,10 @@ const loadTrack = function(src, track) {
     }
 
     track.loaded_ = true;
+
+    if (response.rawRequest.responseURL) {
+      track.baseURL = response.rawRequest.responseURL;
+    }
 
     // Make sure that vttjs has loaded, otherwise, wait till it finished loading
     // NOTE: this is only used for the alt/video.novtt.js build
@@ -207,7 +209,7 @@ class TextTrack extends Track {
         get() {
           return default_;
         },
-        set() {}
+        set() { }
       },
 
       /**
@@ -263,7 +265,7 @@ class TextTrack extends Track {
 
           return cues;
         },
-        set() {}
+        set() { }
       },
 
       /**
@@ -292,8 +294,8 @@ class TextTrack extends Track {
             if (cue.startTime <= ct && cue.endTime >= ct) {
               active.push(cue);
             } else if (cue.startTime === cue.endTime &&
-                       cue.startTime <= ct &&
-                       cue.startTime + 0.5 >= ct) {
+              cue.startTime <= ct &&
+              cue.startTime + 0.5 >= ct) {
               active.push(cue);
             }
           }
@@ -315,9 +317,7 @@ class TextTrack extends Track {
 
           return activeCues;
         },
-
-        // /!\ Keep this setter empty (see the timeupdate handler above)
-        set() {}
+        set() { }
       }
     });
 
